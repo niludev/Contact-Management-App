@@ -19,6 +19,12 @@ public class ContactServiceImpl implements ContactService{
     @Override
     public Contact addContact(String name, List<String> phoneNumbers) {
 
+        for (String phone : phoneNumbers) {
+            if (!isValidPhoneNumber(phone)) {
+                throw new ContactValidationException("Invalid phone number: " + phone);
+            }
+        }
+
         if (name == null) {
             throw new ContactValidationException("Name cannot be null");
         }
@@ -66,6 +72,23 @@ public class ContactServiceImpl implements ContactService{
         return contact;
     }
 
+    // ---------------------- addContact and updateContact Helper ----------------------
+
+    private boolean isValidPhoneNumber(String phone) {
+        if (phone == null || phone.isEmpty()) {
+            return false;
+        }
+
+        for (char ch : phone.toCharArray()) {
+            if (!Character.isDigit(ch)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+
     @Override
     public Contact deleteContact(String name) {
 
@@ -107,6 +130,12 @@ public class ContactServiceImpl implements ContactService{
 
     @Override
     public Contact updateContact(String oldName, String newName, List<String> newPhoneNumbers) {
+
+        for (String phone : newPhoneNumbers) {
+            if (!isValidPhoneNumber(phone)) {
+                throw new ContactValidationException("Invalid phone number: " + phone);
+            }
+        }
 
         if (oldName == null || newName == null) {
             throw new ContactValidationException("Names cannot be null");
