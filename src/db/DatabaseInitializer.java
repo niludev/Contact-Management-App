@@ -14,11 +14,11 @@ public class DatabaseInitializer {
 
     public static void initialize() throws IOException {
 
-        Connection connection = ApplicationContext.getInstance().getConnection();
+//        Connection connection = ApplicationContext.getInstance().getConnection();
 
         String sql = Files.readString(Path.of(ApplicationProperties.SCHEMA_FILE));
 
-        try {
+        try(Connection connection = ApplicationContext.getInstance().getConnection()) {
 
             Statement statement = connection.createStatement();
 

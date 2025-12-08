@@ -1,12 +1,11 @@
 package view;
 
 import model.Contact;
-import service.ContactService;
 import service.ContactServiceImpl;
-import service.exeptions.ContactValidationException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 public class ContactConsoleApp {
@@ -100,7 +99,7 @@ public class ContactConsoleApp {
         try {
             Contact contact = contactService.addContact(name, phoneNumbers);
             System.out.println("Contact added: " + contact.getName());
-        } catch (ContactValidationException e) {
+        } catch (IllegalArgumentException | IllegalStateException e) {
             System.out.println("Error: " + e.getMessage());
         }
 
@@ -135,7 +134,7 @@ public class ContactConsoleApp {
         try {
             Contact updated = contactService.updateContact(oldName, newName, newPhones);
             System.out.println("Contact updated: " + updated.getName());
-        } catch (ContactValidationException e) {
+        } catch (IllegalArgumentException | IllegalStateException | NoSuchElementException e) {
             System.out.println("Error: " + e.getMessage());
         }
     }
@@ -167,18 +166,22 @@ public class ContactConsoleApp {
             return;
         }
 
-        List<Contact> found = contactService.searchByNamePart(namePart);
+        try {
+            List<Contact> found = contactService.searchByNamePart(namePart);
 
-        if (found.isEmpty()) {
-            System.out.println("No contacts found for: " + namePart);
-            return;
-        }
+            if (found.isEmpty()) {
+                System.out.println("No contacts found for: " + namePart);
+                return;
+            }
 
-        System.out.println("Found contacts:");
-        int index = 1;
-        for (Contact c : found) {
-            System.out.println(index++ + ". " + formatContact(c));
-        }
+            System.out.println("Found contacts:");
+            int index = 1;
+            for (Contact c : found) {
+                System.out.println(index++ + ". " + formatContact(c));
+            }
+        } catch (IllegalArgumentException e) {
+        System.out.println("Error: " + e.getMessage());
+    }
     }
 
 
@@ -193,17 +196,21 @@ public class ContactConsoleApp {
             return;
         }
 
-        List<Contact> found = contactService.searchByPhonePart(phonePart);
+        try {
+            List<Contact> found = contactService.searchByPhonePart(phonePart);
 
-        if (found.isEmpty()) {
-            System.out.println("No contacts found for phone part: " + phonePart);
-            return;
-        }
+            if (found.isEmpty()) {
+                System.out.println("No contacts found for phone part: " + phonePart);
+                return;
+            }
 
-        System.out.println("Found contacts:");
-        int index = 1;
-        for (Contact c : found) {
-            System.out.println(index++ + ". " + formatContact(c));
+            System.out.println("Found contacts:");
+            int index = 1;
+            for (Contact c : found) {
+                System.out.println(index++ + ". " + formatContact(c));
+            }
+        } catch (IllegalArgumentException e) {
+            System.out.println("Error: " + e.getMessage());
         }
     }
 
@@ -222,7 +229,7 @@ public class ContactConsoleApp {
         try {
             Contact deleted = contactService.deleteContact(name);
             System.out.println("Deleted contact: " + deleted.getName());
-        } catch (ContactValidationException e) {
+        } catch (IllegalArgumentException | NoSuchElementException e) {
             System.out.println("Error: " + e.getMessage());
         }
     }

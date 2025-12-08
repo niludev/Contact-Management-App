@@ -2,10 +2,10 @@ package service;
 
 import model.Contact;
 import repository.interfaces.ContactRepository;
-import service.exeptions.ContactValidationException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 public class ContactServiceImpl implements ContactService{
 
@@ -19,29 +19,30 @@ public class ContactServiceImpl implements ContactService{
     @Override
     public Contact addContact(String name, List<String> phoneNumbers) {
 
-        for (String phone : phoneNumbers) {
-            if (!isValidPhoneNumber(phone)) {
-                throw new ContactValidationException("Invalid phone number: " + phone);
-            }
-        }
-
         if (name == null) {
-            throw new ContactValidationException("Name cannot be null");
+            throw new IllegalArgumentException("Name cannot be null");
         }
 
         name = name.toLowerCase().trim();
         if (name.isEmpty()) {
-            throw new ContactValidationException("Name cannot be empty");
+            throw new IllegalArgumentException("Name cannot be empty");
         }
 
         if (phoneNumbers == null) {
             phoneNumbers = new ArrayList<>();
         }
+
+        for (String phone : phoneNumbers) {
+            if (!isValidPhoneNumber(phone)) {
+                throw new IllegalArgumentException("Invalid phone number: " + phone);
+            }
+        }
+
         Contact existing = contactRepository.findByName(name);
 
 //      uniq name:
         if (existing != null) {
-            throw new ContactValidationException("Contact with name '" + name + "' already exists");
+            throw new IllegalStateException("Contact with name '" + name + "' already exists");
         }
 
 
@@ -58,7 +59,7 @@ public class ContactServiceImpl implements ContactService{
             }
 
             if (contactRepository.existsPhoneNumber(normalizedPhone)) {
-                throw new ContactValidationException("Phone number '" + normalizedPhone + "' already exists");
+                throw new IllegalStateException("Phone number '" + normalizedPhone + "' already exists");
             }
 
             cleanedPhones.add(normalizedPhone);
@@ -93,17 +94,17 @@ public class ContactServiceImpl implements ContactService{
     public Contact deleteContact(String name) {
 
         if (name == null) {
-            throw new ContactValidationException("Name cannot be null");
+            throw new IllegalArgumentException("Name cannot be null");
         }
 
         name = name.toLowerCase().trim();
         if (name.isEmpty()) {
-            throw new ContactValidationException("Name cannot be empty");
+            throw new IllegalArgumentException("Name cannot be empty");
         }
 
         Contact existing = contactRepository.findByName(name);
         if (existing == null) {
-            throw new ContactValidationException("Contact with name '" + name + "' not found");
+            throw new NoSuchElementException("Contact with name '" + name + "' not found");
         }
 
         return contactRepository.remove(name);
@@ -112,12 +113,20 @@ public class ContactServiceImpl implements ContactService{
     @Override
     public List<Contact> searchByNamePart(String namePart) {
 
+        if (namePart == null) {
+            throw new IllegalArgumentException("Search text cannot be null");
+        }
+
         namePart = namePart.toLowerCase().trim();
         return contactRepository.searchByNamePart(namePart);
     }
 
     @Override
     public List<Contact> searchByPhonePart(String phonePart) {
+
+        if (phonePart == null) {
+            throw new IllegalArgumentException("Search text cannot be null");
+        }
 
         phonePart = phonePart.trim();
        return contactRepository.searchByPhonePart(phonePart);
@@ -131,36 +140,36 @@ public class ContactServiceImpl implements ContactService{
     @Override
     public Contact updateContact(String oldName, String newName, List<String> newPhoneNumbers) {
 
-        for (String phone : newPhoneNumbers) {
-            if (!isValidPhoneNumber(phone)) {
-                throw new ContactValidationException("Invalid phone number: " + phone);
-            }
-        }
-
         if (oldName == null || newName == null) {
-            throw new ContactValidationException("Names cannot be null");
+            throw new IllegalArgumentException("Names cannot be null");
         }
 
         oldName = oldName.toLowerCase().trim();
         newName = newName.toLowerCase().trim();
 
         if (oldName.isEmpty() || newName.isEmpty()) {
-            throw new ContactValidationException("Names cannot be empty");
+            throw new IllegalArgumentException("Names cannot be empty");
         }
 
         if (newPhoneNumbers == null) {
             newPhoneNumbers = new ArrayList<>();
         }
 
+        for (String phone : newPhoneNumbers) {
+            if (!isValidPhoneNumber(phone)) {
+                throw new IllegalArgumentException("Invalid phone number: " + phone);
+            }
+        }
+
 //      checking if this name exists
         Contact existingContact = contactRepository.findByName(oldName);
         if (existingContact == null) {
-            throw new ContactValidationException("Contact with name '" + oldName + "' not found");
+            throw new NoSuchElementException("Contact with name '" + oldName + "' not found");
         }
 
 //      if newName is unique:
         if (!newName.equals(oldName) && contactRepository.findByName(newName) != null) {
-            throw new ContactValidationException("Contact with name '" + newName + "' already exists");
+            throw new IllegalStateException("Contact with name '" + newName + "' already exists");
         }
 
 //      checking if the number is unique:
@@ -178,7 +187,7 @@ public class ContactServiceImpl implements ContactService{
             }
 
             if(contactRepository.existsPhoneNumberForOtherContacts(normalizedPhone, oldName)) {
-                throw new ContactValidationException("Phone number '" + normalizedPhone + "' already exists for another contact");
+                throw new IllegalStateException("Phone number '" + normalizedPhone + "' already exists for another contact");
             }
 
             cleanedPhones.add(normalizedPhone);
